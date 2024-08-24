@@ -4,6 +4,9 @@ import speech_recognition as sr
 import pyttsx3
 import google.generativeai as genai
 
+from gtts import gTTS, gTTSError, lang
+from playsound import playsound
+
 '''
 APLIKASI BERIKUT HANYA BISA DIJALANKAN SETELAH MENYELESAIKAN AUTHENTIKASI
 GOOGLE CLOUD. UNTUK INFORMASI LEBIH LANJUT SILAHKAN HUBUNGI: FARRAS ADHANI ZAYN
@@ -13,11 +16,11 @@ HarmCategory = genai.types.HarmCategory
 HarmBlockTreshold = genai.types.HarmBlockThreshold
 
 class Lovot:
-    message = ""
-    model = ""
-    chat = ""
-    recognizer = ""
-    engine = ""
+    message = None
+    model = None
+    chat = None
+    recognizer = None
+    engine = None
     
     isSpeaking = False
     isAnswering = False
@@ -56,9 +59,7 @@ class Lovot:
     
     def __init__(self):
         self.recognizer  = sr.Recognizer()
-        self.engine = pyttsx3.init()
-        self.change_voice()
-        self.engine.setProperty('rate', 180)
+        self.prep_voice()
         load_dotenv()
 
         '''
@@ -72,10 +73,15 @@ class Lovot:
         )
         self.chat = self.model.start_chat(history=self.history)
         
-    def change_voice(self):
+    def prep_voice(self):
+        self.engine = pyttsx3.init()
         voices = self.engine.getProperty('voices')
         for voice in voices:
-            if 'ID-ID' in voice.id: self.engine.setProperty('voice', voice.id)
+            if 'ID-ID' in voice.id or 'indonesian' in voice.name:
+                self.engine.setProperty('voice', voice.id)
+                self.engine.setProperty('rate', 180)
+                return 1
+        self.engine = None
 
     def multiturn_generate_content(self):
         answer = self.chat.send_message(
@@ -87,18 +93,37 @@ class Lovot:
         self.answer(text=answer)
         
     def capture_voice(self):
+        # if self.isAnswering is True: return ""
         with sr.Microphone() as source:
-            self.recognizer.adjust_for_ambient_noise(source=source, duration=0.1)
             self.isSpeaking = True
+            self.recognizer.adjust_for_ambient_noise(source=source, duration=0.1)
             print("Mendengarkan...")
             audio = self.recognizer.listen(source=source)
         return self.convert_stt(audio=audio)
     
     def answer(self, text):
         self.isAnswering = True
+        
+        if self.engine is None:
+            file_path = 'Ini.mp3'
+            
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
+            tts = gTTS(text=text, lang='id')
+            tts.save(file_path)
+
+            try:
+                playsound(file_path)
+                return 1
+            except Exception as e:
+                print(f"Error playing sound: {e}")
+                return 0
+                
         self.engine.say(text=text)
         self.engine.runAndWait()
         self.engine.stop()
+        return 1
         
     def convert_stt(self, audio):
         text = ""
