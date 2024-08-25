@@ -79,10 +79,15 @@ class Lovot:
         self.engine = pyttsx3.init()
         voices = self.engine.getProperty('voices')
         for voice in voices:
-            if 'ID-ID' in voice.id or 'indonesian' in voice.name:
+            if 'ID' in voice.id or 'indonesian' in voice.name:
                 self.engine.setProperty('voice', voice.id)
                 self.engine.setProperty('rate', 170)
                 return 1
+            
+        '''
+        Jika ingin melakukan cek pada Speech tersedia di perangkat, silahkan comment line dibawah
+        '''
+        
         self.engine = None
 
     def multiturn_generate_content(self):
@@ -166,7 +171,7 @@ try:
     
     '''
     Untuk melihat bahasa yang support dan terinstall pada windows / perangkat
-    silahkan un-comment for loop dibawah berikut
+    silahkan un-comment for loop dibawah berikut dan comment self.engine = None pada method prep_voice() diatas
     '''
     
     # for voice in lovot.engine.getProperty('voices'):
