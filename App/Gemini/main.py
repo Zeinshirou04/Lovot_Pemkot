@@ -123,8 +123,8 @@ class Lovot:
         return 1
     
     def answer_gtts(self, text):
-        input_path = 'in.mp3'
-        output_path = 'out.mp3'
+        input_path = '/Voice/Result/in.mp3'
+        output_path = '/Voice/Result/out.mp3'
         
         if os.path.exists(input_path):
             os.remove(input_path)
@@ -199,7 +199,7 @@ try:
     Apabila sebaliknya, ubah menjadi False.
     '''
 
-    lovot = Lovot(GTTS=True, chipmunk=False)
+    lovot = Lovot(GTTS=False, chipmunk=False)
     
     '''
     Untuk melihat bahasa yang support dan terinstall pada windows / perangkat
