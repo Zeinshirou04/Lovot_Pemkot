@@ -79,7 +79,7 @@ class Lovot:
         self.engine = pyttsx3.init()
         voices = self.engine.getProperty('voices')
         for voice in voices:
-            if 'ID' in voice.id or 'indonesian' in voice.name:
+            if 'ID-ID' in voice.id or 'indonesian' in voice.name:
                 self.engine.setProperty('voice', voice.id)
                 self.engine.setProperty('rate', 170)
                 return 1
