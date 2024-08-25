@@ -6,6 +6,7 @@ import google.generativeai as genai
 
 from gtts import gTTS, gTTSError, lang
 from playsound import playsound
+from pydub import AudioSegment
 
 '''
 APLIKASI BERIKUT HANYA BISA DIJALANKAN SETELAH MENYELESAIKAN AUTHENTIKASI
@@ -24,6 +25,7 @@ class Lovot:
     
     isSpeaking = False
     isAnswering = False
+    isUsingGTTS = False
     
     # INITIAL_MESSAGE = "Halo, disini aku akan memberikan mu sebuah identitas untuk deployment mu.\nNamamu: Lintang\nPembuat: Pemkot Semarang dan Fakultas Teknik UDINUS (Universitas Dian Nuswantoro)\nDikhususkan kepada: Ibu Prof. Dr. (H.C.) Hj. Diah Permata Megawati Setiawati Soekarnoputri\nDibuat pada: Agustus 2024\nTugas: Asisten Pribadi (Politik, Personal, Umum, Rumah Tangga, Kesehatan, Ekonomi)\n\nBeberapa aturan yang perlu kamu atuhi\n1. Dilarang menggunakan markdown, dan juga emoji\n2. Dilarang menjawab pertanyaan tidak jelas atau noise dan cukup diam jika termasuk dalam kategori tersebut seperti hanya mengembalikan response berupa string kosong"
 
@@ -59,7 +61,8 @@ class Lovot:
                 HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockTreshold.BLOCK_NONE
     }
     
-    def __init__(self):
+    def __init__(self, GTTS = False):
+        self.isUsingGTTS = GTTS
         self.recognizer  = sr.Recognizer()
         self.prep_voice()
         load_dotenv()
@@ -78,6 +81,9 @@ class Lovot:
     def prep_voice(self):
         self.engine = pyttsx3.init()
         voices = self.engine.getProperty('voices')
+        if self.isUsingGTTS:
+            self.engine = None
+            return 1
         for voice in voices:
             if 'ID-ID' in voice.id or 'indonesian' in voice.name:
                 self.engine.setProperty('voice', voice.id)
@@ -97,7 +103,7 @@ class Lovot:
             safety_settings=self.safety_settings
         ).text
         print(answer)
-        self.answer(text=f'<pitch middle="10">{answer}</pitch>')
+        self.answer(text=answer)
         
     def capture_voice(self):
         # if self.isAnswering is True: return ""
@@ -112,25 +118,47 @@ class Lovot:
         self.isAnswering = True
         
         if self.engine is None:
-            file_path = 'Ini.mp3'
-            
-            if os.path.exists(file_path):
-                os.remove(file_path)
-
-            tts = gTTS(text=text, lang='id')
-            tts.save(file_path)
-
-            try:
-                playsound(file_path)
-                return 1
-            except Exception as e:
-                print(f"Error playing sound: {e}")
-                return 0
-                
+            self.answer_gtts(text=text)
+            return 1
+        
+        text = f'<pitch middle="20">{text}</pitch>'
         self.engine.say(text=text)
         self.engine.runAndWait()
         self.engine.stop()
         return 1
+    
+    def answer_gtts(self, text):
+        input_path = 'in.mp3'
+        
+        if os.path.exists(input_path):
+            os.remove(input_path)
+
+        tts = gTTS(text=text, lang='id')
+        tts.save(input_path)
+        
+        output_path = self.change_pitch(input_path=input_path)
+
+        try:
+            playsound(output_path)
+            return 1
+        except Exception as e:
+            print(f"Error playing sound: {e}")
+            return 0
+        
+    def change_pitch(self, input_path):
+        # print(input_path)
+        output_path = "out.mp3"
+        
+        sound = AudioSegment.from_file(file=input_path, format="mp3")
+        
+        # Semakin kecil octaves, suara semakin chipmunk
+        octaves = 0.5
+        
+        new_sample_rate = int(sound.frame_rate * (2.0 ** octaves))
+        hipitch_sound = sound._spawn(sound.raw_data, overrides={'frame_rate': new_sample_rate})
+        hipitch_sound = hipitch_sound.set_frame_rate(44100)
+        hipitch_sound.export(output_path, format="mp3")
+        return output_path
         
     def convert_stt(self, audio):
         text = ""
@@ -164,10 +192,16 @@ class Lovot:
         text = ""
         while text == "": text = self.capture_voice()
         answer = self.message(text=text)
-        self.answer(text=f'<pitch middle="20">{answer}</pitch>')
+        self.answer(text=answer)
 
 try:
-    lovot = Lovot()
+    
+    '''
+    Jika ingin menggunakan GTTS dan bukan PYTTSX3, maka ubah nilai GTTS di parameter menjadi True.
+    Apabila sebaliknya, ubah menjadi False atau kosongi
+    '''
+
+    lovot = Lovot(GTTS=True)
     
     '''
     Untuk melihat bahasa yang support dan terinstall pada windows / perangkat
