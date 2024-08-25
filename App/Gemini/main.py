@@ -25,7 +25,9 @@ class Lovot:
     isSpeaking = False
     isAnswering = False
     
-    INITIAL_MESSAGE = "Halo, disini aku akan memberikan mu sebuah identitas untuk deployment mu.\nNamamu: Lintang\nPembuat: Pemkot Semarang dan Fakultas Teknik UDINUS (Universitas Dian Nuswantoro)\nDikhususkan kepada: Ibu Prof. Dr. (H.C.) Hj. Diah Permata Megawati Setiawati Soekarnoputri\nDibuat pada: Agustus 2024\nTugas: Asisten Pribadi (Politik, Personal, Umum, Rumah Tangga, Kesehatan, Ekonomi)\n\nBeberapa aturan yang perlu kamu atuhi\n1. Dilarang menggunakan markdown, dan juga emoji\n2. Dilarang menjawab pertanyaan tidak jelas atau noise dan cukup diam jika termasuk dalam kategori tersebut seperti hanya mengembalikan response berupa string kosong"
+    # INITIAL_MESSAGE = "Halo, disini aku akan memberikan mu sebuah identitas untuk deployment mu.\nNamamu: Lintang\nPembuat: Pemkot Semarang dan Fakultas Teknik UDINUS (Universitas Dian Nuswantoro)\nDikhususkan kepada: Ibu Prof. Dr. (H.C.) Hj. Diah Permata Megawati Setiawati Soekarnoputri\nDibuat pada: Agustus 2024\nTugas: Asisten Pribadi (Politik, Personal, Umum, Rumah Tangga, Kesehatan, Ekonomi)\n\nBeberapa aturan yang perlu kamu atuhi\n1. Dilarang menggunakan markdown, dan juga emoji\n2. Dilarang menjawab pertanyaan tidak jelas atau noise dan cukup diam jika termasuk dalam kategori tersebut seperti hanya mengembalikan response berupa string kosong"
+
+    INITIAL_MESSAGE = "Halo, disini aku akan memberikan mu sebuah identitas untuk deployment mu.\nNamamu: Lintang\nPembuat: Pemkot Semarang dan Fakultas Teknik UDINUS (Universitas Dian Nuswantoro)\nDikhususkan kepada: Pemerintah Kota Semarang\nDibuat pada: Agustus 2024\nTugas: Robot Pelayanan Anak (Teman Bermain, Boneka, Umum, Bercanda, Kesehatan, Sosial)\n\nBeberapa aturan yang perlu kamu atuhi\n1. Dilarang menggunakan markdown, dan juga emoji\n2. Dilarang menjawab pertanyaan tidak jelas atau noise dan cukup diam jika termasuk dalam kategori tersebut seperti hanya mengembalikan response berupa string kosong"
 
     history=[
         {
@@ -79,7 +81,7 @@ class Lovot:
         for voice in voices:
             if 'ID-ID' in voice.id or 'indonesian' in voice.name:
                 self.engine.setProperty('voice', voice.id)
-                self.engine.setProperty('rate', 180)
+                self.engine.setProperty('rate', 170)
                 return 1
         self.engine = None
 
@@ -90,7 +92,7 @@ class Lovot:
             safety_settings=self.safety_settings
         ).text
         print(answer)
-        self.answer(text=answer)
+        self.answer(text=f'<pitch middle="10">{answer}</pitch>')
         
     def capture_voice(self):
         # if self.isAnswering is True: return ""
@@ -157,7 +159,7 @@ class Lovot:
         text = ""
         while text == "": text = self.capture_voice()
         answer = self.message(text=text)
-        self.answer(text=answer)
+        self.answer(text=f'<pitch middle="20">{answer}</pitch>')
 
 try:
     lovot = Lovot()
