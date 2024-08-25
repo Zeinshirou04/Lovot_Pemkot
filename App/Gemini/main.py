@@ -8,11 +8,6 @@ from gtts import gTTS, gTTSError, lang
 from playsound import playsound
 from pydub import AudioSegment
 
-'''
-APLIKASI BERIKUT HANYA BISA DIJALANKAN SETELAH MENYELESAIKAN AUTHENTIKASI
-GOOGLE CLOUD. UNTUK INFORMASI LEBIH LANJUT SILAHKAN HUBUNGI: FARRAS ADHANI ZAYN
-'''
-
 HarmCategory = genai.types.HarmCategory
 HarmBlockTreshold = genai.types.HarmBlockThreshold
 
@@ -26,6 +21,7 @@ class Lovot:
     isSpeaking = False
     isAnswering = False
     isUsingGTTS = False
+    isChipmunk = False
     
     # INITIAL_MESSAGE = "Halo, disini aku akan memberikan mu sebuah identitas untuk deployment mu.\nNamamu: Lintang\nPembuat: Pemkot Semarang dan Fakultas Teknik UDINUS (Universitas Dian Nuswantoro)\nDikhususkan kepada: Ibu Prof. Dr. (H.C.) Hj. Diah Permata Megawati Setiawati Soekarnoputri\nDibuat pada: Agustus 2024\nTugas: Asisten Pribadi (Politik, Personal, Umum, Rumah Tangga, Kesehatan, Ekonomi)\n\nBeberapa aturan yang perlu kamu atuhi\n1. Dilarang menggunakan markdown, dan juga emoji\n2. Dilarang menjawab pertanyaan tidak jelas atau noise dan cukup diam jika termasuk dalam kategori tersebut seperti hanya mengembalikan response berupa string kosong"
 
@@ -61,10 +57,11 @@ class Lovot:
                 HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockTreshold.BLOCK_NONE
     }
     
-    def __init__(self, GTTS = False):
+    def __init__(self, GTTS = False, chipmunk = isChipmunk):
         self.isUsingGTTS = GTTS
         self.recognizer  = sr.Recognizer()
-        self.prep_voice()
+        if not self.isUsingGTTS: 
+            self.prep_voice()
         load_dotenv()
 
         '''
@@ -81,9 +78,6 @@ class Lovot:
     def prep_voice(self):
         self.engine = pyttsx3.init()
         voices = self.engine.getProperty('voices')
-        if self.isUsingGTTS:
-            self.engine = None
-            return 1
         for voice in voices:
             if 'ID-ID' in voice.id or 'indonesian' in voice.name:
                 self.engine.setProperty('voice', voice.id)
@@ -91,7 +85,8 @@ class Lovot:
                 return 1
             
         '''
-        Jika ingin melakukan cek pada Speech tersedia di perangkat, silahkan comment line dibawah
+        Jika ingin melakukan cek pada Speech tersedia di perangkat, silahkan comment line dibawah.
+        Line dibawah akan otomatis dijalankan apabila tidak ditemukan voice berbahasa Indonesia di perangkat
         '''
         
         self.engine = None
@@ -129,25 +124,26 @@ class Lovot:
     
     def answer_gtts(self, text):
         input_path = 'in.mp3'
+        output_path = 'out.mp3'
         
         if os.path.exists(input_path):
             os.remove(input_path)
 
         tts = gTTS(text=text, lang='id')
         tts.save(input_path)
-        
-        output_path = self.change_pitch(input_path=input_path)
 
         try:
+            if not self.isChipmunk:
+                playsound(input_path)
+                return 1
+            self.change_pitch(input_path=input_path, output_path=output_path) 
             playsound(output_path)
             return 1
         except Exception as e:
             print(f"Error playing sound: {e}")
             return 0
         
-    def change_pitch(self, input_path):
-        # print(input_path)
-        output_path = "out.mp3"
+    def change_pitch(self, input_path = 'in.mp3', output_path = 'out.mp3'):
         
         sound = AudioSegment.from_file(file=input_path, format="mp3")
         
@@ -198,10 +194,12 @@ try:
     
     '''
     Jika ingin menggunakan GTTS dan bukan PYTTSX3, maka ubah nilai GTTS di parameter menjadi True.
-    Apabila sebaliknya, ubah menjadi False atau kosongi
+    Apabila sebaliknya, ubah menjadi False.
+    Jika ingin menggunakan suara chipmunk, maka ubah nilai chipmunk menjadi True.
+    Apabila sebaliknya, ubah menjadi False.
     '''
 
-    lovot = Lovot(GTTS=True)
+    lovot = Lovot(GTTS=True, chipmunk=False)
     
     '''
     Untuk melihat bahasa yang support dan terinstall pada windows / perangkat
