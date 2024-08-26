@@ -59,6 +59,7 @@ class Lovot:
     
     def __init__(self, GTTS = False, chipmunk = isChipmunk):
         self.isUsingGTTS = GTTS
+        self.isChipmunk = chipmunk
         self.recognizer  = sr.Recognizer()
         if not self.isUsingGTTS: 
             self.prep_voice()
@@ -123,8 +124,8 @@ class Lovot:
         return 1
     
     def answer_gtts(self, text):
-        input_path = '/Voice/Result/in.mp3'
-        output_path = '/Voice/Result/out.mp3'
+        input_path = 'Voice/Result/in.mp3'
+        output_path = 'Voice/Result/out.mp3'
         
         if os.path.exists(input_path):
             os.remove(input_path)
@@ -199,7 +200,7 @@ try:
     Apabila sebaliknya, ubah menjadi False.
     '''
 
-    lovot = Lovot(GTTS=False, chipmunk=False)
+    lovot = Lovot(GTTS=True, chipmunk=True)
     
     '''
     Untuk melihat bahasa yang support dan terinstall pada windows / perangkat
