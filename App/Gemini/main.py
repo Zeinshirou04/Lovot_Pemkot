@@ -200,7 +200,7 @@ try:
     Apabila sebaliknya, ubah menjadi False.
     '''
 
-    lovot = Lovot(GTTS=True, chipmunk=True)
+    lovot = Lovot(GTTS=False, chipmunk=False)
     
     '''
     Untuk melihat bahasa yang support dan terinstall pada windows / perangkat
