@@ -165,7 +165,7 @@ class Lovot:
             Jika terjadi error pada line berikut, silahkan meminta Credentials JSON pada Farras Adhani Zayn
             '''
             
-            text = self.recognizer.recognize_google_cloud(audio_data=audio, credentials_json=os.getenv('CREDENTIAL_JSON_PATH'), language="id-ID")
+            text = self.recognizer.recognize_google(audio_data=audio, language="id-ID")
             print(f"Pesan = {text}")
         except sr.UnknownValueError:
             print("Kesalahan Nilai")
