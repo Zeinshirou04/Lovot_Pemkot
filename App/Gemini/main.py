@@ -153,8 +153,6 @@ class Lovot:
 
         if os.path.exists(input_path):
             os.remove(input_path)
-            
-        text = self.remove_asterisks_and_emojis(text=text)
 
         try:
             tts = gTTS(text=text, lang="id")
@@ -215,8 +213,8 @@ class Lovot:
     def message(self, text=""):
         if text == "":
             text = input("Masukkan Pesan: ")
-        answer = self.response(text=text)
-        # print(answer)
+        answer = self.remove_asterisks_and_emojis(text=self.response(text=text))
+        print(answer)
         return answer
 
     def response(self, text):
@@ -231,7 +229,6 @@ class Lovot:
         while text == "":
             text = self.capture_voice()
         answer = self.message(text=text)
-        
         self.answer(text=answer)
 
 
