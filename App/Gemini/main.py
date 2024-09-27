@@ -48,7 +48,7 @@ class Lovot:
         "temperature": 1,
         "top_p": 0.95,
         "top_k": 64,
-        "max_output_tokens": 8192,
+        "max_output_tokens": 420,
         "response_mime_type": "text/plain",
     }
 
@@ -205,6 +205,8 @@ class Lovot:
 
             text = self.recognizer.recognize_google(audio_data=audio, language="id-ID")
             print(f"Pesan = {text}")
+        except Exception as e:
+            print(e)
         except sr.UnknownValueError:
             print("Kesalahan Nilai")
         except sr.RequestError as e:
