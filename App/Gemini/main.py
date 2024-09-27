@@ -167,9 +167,13 @@ class Lovot:
         try:
             if not self.isChipmunk:
                 playsound(input_path)
+                if os.path.exists(output_path):
+                    os.remove(output_path)
                 return 1
             self.change_pitch(input_path=input_path, output_path=output_path)
             playsound(output_path)
+            if os.path.exists(output_path):
+                os.remove(output_path)
             return 1
         except Exception as e:
             print(f"Error playing sound: {e}")
@@ -187,9 +191,6 @@ class Lovot:
             sound.raw_data, overrides={"frame_rate": new_sample_rate}
         )
         hipitch_sound = hipitch_sound.set_frame_rate(44100)
-        
-        if os.path.exists(output_path):
-            os.remove(output_path)
         
         hipitch_sound.export(output_path, format="mp3")
         return output_path
