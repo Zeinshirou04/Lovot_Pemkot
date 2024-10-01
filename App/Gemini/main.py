@@ -4,6 +4,7 @@ import speech_recognition as sr
 import pyttsx3
 import google.generativeai as genai
 import re
+import multiprocessing
 
 from gtts import gTTS, gTTSError, lang
 from playsound import playsound
@@ -27,7 +28,7 @@ class Lovot:
 
     # INITIAL_MESSAGE = "Halo, disini aku akan memberikan mu sebuah identitas untuk deployment mu.\nNamamu: Lintang\nPembuat: Pemkot Semarang dan Fakultas Teknik UDINUS (Universitas Dian Nuswantoro)\nDikhususkan kepada: Ibu Prof. Dr. (H.C.) Hj. Diah Permata Megawati Setiawati Soekarnoputri\nDibuat pada: Agustus 2024\nTugas: Asisten Pribadi (Politik, Personal, Umum, Rumah Tangga, Kesehatan, Ekonomi)\n\nBeberapa aturan yang perlu kamu atuhi\n1. Dilarang menggunakan markdown, dan juga emoji\n2. Dilarang menjawab pertanyaan tidak jelas atau noise dan cukup diam jika termasuk dalam kategori tersebut seperti hanya mengembalikan response berupa string kosong"
 
-    INITIAL_MESSAGE = "Halo, disini aku akan memberikan mu sebuah identitas untuk deployment mu.\nNamamu: Rosana (Robot Sahabat Anak)\nPembuat: Pemkot Semarang dan Fakultas Teknik UDINUS (Universitas Dian Nuswantoro)\nDikhususkan kepada: Pemerintah Kota Semarang\nDibuat pada: Agustus 2024\nTugas: Robot Pelayanan Anak (Teman Bermain, Boneka, Umum, Bercanda, Kesehatan, Sosial)\n\nBeberapa aturan yang perlu kamu atuhi\n1. Dilarang menggunakan markdown dan juga emoji atau sejenisnya!\n2. Dilarang menjawab pertanyaan tidak jelas atau noise dan cukup diam jika termasuk dalam kategori tersebut seperti hanya mengembalikan response berupa string kosong"
+    INITIAL_MESSAGE = "Halo, disini aku akan memberikan mu sebuah identitas untuk deployment mu.\nNamamu: Rosana (Robot Sahabat Anak)\nPembuat: Pemkot Semarang dan Fakultas Teknik UDINUS (Universitas Dian Nuswantoro)\nDikhususkan kepada: Pemerintah Kota Semarang\nDibuat pada: Agustus 2024\nTugas: Robot Pelayanan Anak (Teman Bermain, Boneka, Umum, Bercanda, Kesehatan, Sosial)\n\nBeberapa aturan yang perlu kamu atuhi\n1. Dilarang menggunakan markdown dan juga emoji atau sejenisnya!\n2. Dilarang menjawab pertanyaan tidak jelas atau noise dan cukup diam jika termasuk dalam kategori tersebut seperti hanya mengembalikan response berupa string kosong. Buatlah jawaban yang tidak panjang dari 1 Paragraf atau 5 Poin Utama."
 
     history = [
         {
@@ -146,13 +147,22 @@ class Lovot:
         # Remove emojis
         text = emoji_pattern.sub(r'', text)
         return text
+    
+    def recognize_stop(self, process):
+        while True:
+            try:
+                if not process.is_alive():
+                    break
+                print("Mendengarkan Stop...")
+                text = self.capture_voice()
+                if 'stop' in text.lower():
+                    process.terminate()
+            except KeyboardInterrupt:
+                process.terminate()
 
     def answer_gtts(self, text):
         input_path = "Voice/Result/in.mp3"
         output_path = "Voice/Result/out.mp3"
-
-        if os.path.exists(input_path):
-            os.remove(input_path)
 
         try:
             tts = gTTS(text=text, lang="id")
@@ -167,17 +177,24 @@ class Lovot:
         try:
             if not self.isChipmunk:
                 playsound(input_path)
-                if os.path.exists(output_path):
-                    os.remove(output_path)
+                self.reset_voice(input_path=input_path, output_path=output_path)
                 return 1
             self.change_pitch(input_path=input_path, output_path=output_path)
-            playsound(output_path)
-            if os.path.exists(output_path):
-                os.remove(output_path)
+            play_process = multiprocessing.Process(target=playsound, args=(output_path,))
+            play_process.start()
+            self.recognize_stop(process=play_process)
+            self.reset_voice(input_path=input_path, output_path=output_path)
             return 1
         except Exception as e:
             print(f"Error playing sound: {e}")
             return 0
+        
+    def reset_voice(self, input_path = "in.mp3", output_path = "out.mp3"):
+        if os.path.exists(input_path):
+            os.remove(input_path)
+        if os.path.exists(output_path):
+            os.remove(output_path)
+        
 
     def change_pitch(self, input_path="in.mp3", output_path="out.mp3"):
 
@@ -234,46 +251,46 @@ class Lovot:
         answer = self.message(text=text)
         self.answer(text=answer)
 
+if __name__ == '__main__':
+    try:
 
-try:
+        """
+        Jika ingin menggunakan GTTS dan bukan PYTTSX3, maka ubah nilai GTTS di parameter menjadi True.
+        Apabila sebaliknya, ubah menjadi False.
+        Jika ingin menggunakan suara chipmunk, maka ubah nilai chipmunk menjadi True.
+        Apabila sebaliknya, ubah menjadi False.
+        """
 
-    """
-    Jika ingin menggunakan GTTS dan bukan PYTTSX3, maka ubah nilai GTTS di parameter menjadi True.
-    Apabila sebaliknya, ubah menjadi False.
-    Jika ingin menggunakan suara chipmunk, maka ubah nilai chipmunk menjadi True.
-    Apabila sebaliknya, ubah menjadi False.
-    """
+        """
+        Jika ingin menggunakan chipmunk, maka GTTS harus bernilai True
+        """
 
-    """
-    Jika ingin menggunakan chipmunk, maka GTTS harus bernilai True
-    """
+        lovot = Lovot(GTTS=True, chipmunk=True)
 
-    lovot = Lovot(GTTS=True, chipmunk=True)
+        """
+        Untuk melihat bahasa yang support dan terinstall pada windows / perangkat
+        silahkan un-comment for loop dibawah berikut dan comment self.engine = None pada method prep_voice() diatas
+        """
 
-    """
-    Untuk melihat bahasa yang support dan terinstall pada windows / perangkat
-    silahkan un-comment for loop dibawah berikut dan comment self.engine = None pada method prep_voice() diatas
-    """
+        # for voice in lovot.engine.getProperty('voices'):
+        #     print(voice.id)
 
-    # for voice in lovot.engine.getProperty('voices'):
-    #     print(voice.id)
+        """
+        Code dibawah digunakan apabila ingin melakukan testing pada answer dan speaking
+        silahkan di un-comment apabila diperlukan saja
+        """
 
-    """
-    Code dibawah digunakan apabila ingin melakukan testing pada answer dan speaking
-    silahkan di un-comment apabila diperlukan saja
-    """
+        # lovot.answer("Halo")
 
-    # lovot.answer("Halo")
+        # lovot.capture_voice()
 
-    # lovot.capture_voice()
+        """
+        Untuk menjalankan program, silahkan un comment while loop dibawah sebelum menjalankan
+        """
 
-    """
-    Untuk menjalankan program, silahkan un comment while loop dibawah sebelum menjalankan
-    """
+        lovot.multiturn_generate_content()
+        while True:
+            lovot.run()
 
-    lovot.multiturn_generate_content()
-    while True:
-        lovot.run()
-
-except KeyboardInterrupt:
-    print("\nPrgoram Selesai")
+    except KeyboardInterrupt:
+        print("\nPrgoram Selesai")
