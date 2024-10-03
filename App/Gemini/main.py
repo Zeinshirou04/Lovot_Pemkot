@@ -149,16 +149,15 @@ class Lovot:
         return text
     
     def recognize_stop(self, process):
-        while True:
-            try:
-                if not process.is_alive():
-                    break
-                print("Mendengarkan Stop...")
-                text = self.capture_voice()
-                if 'stop' in text.lower():
-                    process.terminate()
-            except KeyboardInterrupt:
-                process.terminate()
+        try:
+            if not process.is_alive(): return True
+            while True:
+                    print("Mendengarkan Stop...")
+                    text = self.capture_voice()
+                    if 'stop' in text.lower():
+                        process.terminate()
+        except KeyboardInterrupt:
+            process.terminate()
 
     def answer_gtts(self, text):
         input_path = "Voice/Result/in.mp3"
