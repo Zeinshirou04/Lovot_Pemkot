@@ -109,7 +109,7 @@ class Lovot:
         try:
             with sr.Microphone() as source:
                 self.isSpeaking = True
-                self.recognizer.adjust_for_ambient_noise(source=source, duration=0.1)
+                self.recognizer.adjust_for_ambient_noise(source=source, duration=0.2)
                 print("Mendengarkan...")
                 audio = self.recognizer.listen(source=source)
         except Exception as e:
