@@ -1,3 +1,4 @@
+
 import os
 from dotenv import load_dotenv
 import speech_recognition as sr
@@ -6,6 +7,7 @@ import google.generativeai as genai
 import re
 import multiprocessing
 from openai import OpenAI
+import time
 
 from gtts import gTTS, gTTSError, lang
 from playsound import playsound
@@ -21,13 +23,14 @@ class Lovot:
     chat = None
     recognizer = None
     engine = None
+    model = None
 
     isSpeaking = False
     isAnswering = False
     isUsingGTTS = False
     isChipmunk = False
 
-    INITIAL_MESSAGE = "Halo, disini aku akan memberikan mu sebuah identitas untuk deployment mu.\nNamamu: Rosana (Robot Sahabat Anak)\nPembuat: Pemkot Semarang dan Fakultas Teknik UDINUS (Universitas Dian Nuswantoro)\nDikhususkan kepada: Pemerintah Kota Semarang\nDibuat pada: Agustus 2024\nTugas: Robot Pelayanan Anak (Teman Bermain, Boneka, Umum, Bercanda, Kesehatan, Sosial)\n\nBeberapa aturan yang perlu kamu atuhi\n1. Dilarang menggunakan markdown dan juga emoji atau sejenisnya!\n2. Dilarang menjawab pertanyaan tidak jelas atau noise dan cukup diam jika termasuk dalam kategori tersebut seperti hanya mengembalikan response berupa string kosong. Buatlah jawaban yang tidak panjang dari 1 Paragraf atau 5 Poin Utama. Satu informasi yang perlu kamu ketahui: Kepala Dinas Diskominfo Semarang saat ini adalah: Soenarto, S.Kom, M.M"
+    INITIAL_MESSAGE = "Halo, disini aku akan memberikan mu sebuah identitas untuk deployment mu.\nNamamu: Rosana (Robot Sahabat Anak)\nPembuat: Pemkot Semarang dan Fakultas Teknik UDINUS (Universitas Dian Nuswantoro)\nDikhususkan kepada: Pemerintah Kota Semarang\nDibuat pada: Agustus 2024\nTugas: Robot Pelayanan Anak (Teman Bermain, Boneka, Umum, Bercanda, Kesehatan, Sosial)\n\nBeberapa aturan yang perlu kamu atuhi\n1. Dilarang menggunakan markdown dan juga emoji atau sejenisnya!\n2. Dilarang menjawab pertanyaan tidak jelas atau noise dan cukup diam jika termasuk dalam kategori tersebut seperti hanya mengembalikan response berupa string kosong. Buatlah jawaban yang tidak panjang dari 1 Paragraf atau 5 Poin Utama. Satu informasi yang perlu kamu ketahui: Kepala Dinas Diskominfo Semarang saat ini adalah Pak Soenarto, S.Kom, M.M dan Walikota Semarang saat ini adalah Ibu Dr. Ir. Hj. Hevearita Gunaryanti Rahayu, M.Sos."
 
     conversation = [
         {
@@ -36,7 +39,8 @@ class Lovot:
         },
     ]
 
-    def __init__(self, GTTS=False, chipmunk=isChipmunk):
+    def __init__(self, GTTS=False, chipmunk=isChipmunk, gptModel = "gpt-4o"):
+        self.model = gptModel
         self.isUsingGTTS = GTTS
         self.isChipmunk = chipmunk
         self.recognizer = sr.Recognizer()
@@ -71,7 +75,7 @@ class Lovot:
     def initial_chat(self):
         answer = self.send_message(text="Hai, Perkenalkan Dirimu!")
         print(answer)
-        self.answer(text=answer)
+        self.answer(text=answer, can_stop=True)
         
     def send_message(self, text):
         message = self.conversation
@@ -80,7 +84,7 @@ class Lovot:
             'content': text
         })
         completion = self.client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model=self.model,
             messages=message,
         )
         return completion.choices[0].message.content
@@ -90,18 +94,19 @@ class Lovot:
         try:
             with sr.Microphone() as source:
                 self.isSpeaking = True
-                self.recognizer.adjust_for_ambient_noise(source=source, duration=0.5)
+                self.recognizer.adjust_for_ambient_noise(source=source, duration=1)
+                self.recognizer.pause_threshold = 0.7
                 print("Mendengarkan...")
-                audio = self.recognizer.listen(source=source)
+                audio = self.recognizer.listen(source=source, timeout=2)
         except Exception as e:
             print(e)
         return self.convert_stt(audio=audio)
 
-    def answer(self, text):
+    def answer(self, text, can_stop = False):
         self.isAnswering = True
 
         if self.engine is None:
-            self.answer_gtts(text=text)
+            self.answer_gtts(text=text, can_stop=can_stop)
             return 1
 
         text = f'<pitch middle="20">{text}</pitch>'
@@ -141,7 +146,7 @@ class Lovot:
         except KeyboardInterrupt:
             process.terminate()
 
-    def answer_gtts(self, text):
+    def answer_gtts(self, text, can_stop):
         input_path = "Voice/Result/in.mp3"
         output_path = "Voice/Result/out.mp3"
 
@@ -163,7 +168,11 @@ class Lovot:
             self.change_pitch(input_path=input_path, output_path=output_path)
             play_process = multiprocessing.Process(target=playsound, args=(output_path,))
             play_process.start()
-            self.recognize_stop(process=play_process)
+            if can_stop: 
+                self.recognize_stop(process=play_process)
+            else:
+                while play_process.is_alive():
+                    print("Still Alive!")
             self.reset_voice(input_path=input_path, output_path=output_path)
             return 1
         except Exception as e:
@@ -223,10 +232,14 @@ class Lovot:
 
     def run(self):
         text = ""
-        while text == "":
-            text = self.capture_voice()
-        answer = self.message(text=text)
-        self.answer(text=answer)
+        try:
+            while text == "":
+                text = self.capture_voice()
+            answer = self.message(text=text)
+            self.answer(text=answer, can_stop=True)
+            self.answer(text="Apakah ada yang ingin kamu tanyakan?")
+        except:
+            print("No Input Detected")
 
 if __name__ == '__main__':
     try:
@@ -243,6 +256,14 @@ if __name__ == '__main__':
         """
 
         lovot = Lovot(GTTS=True, chipmunk=True)
+
+        """
+        Silahkan Un-comment code dibawah untuk melihat model GPT yang tersedia
+        """
+
+        # load_dotenv()
+        # client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        # print(client.models.list())
 
         """
         Untuk melihat bahasa yang support dan terinstall pada windows / perangkat
