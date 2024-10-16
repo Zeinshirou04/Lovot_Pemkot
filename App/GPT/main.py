@@ -30,7 +30,7 @@ class Lovot:
     isUsingGTTS = False
     isChipmunk = False
 
-    INITIAL_MESSAGE = "Halo, disini aku akan memberikan mu sebuah identitas untuk deployment mu.\nNamamu: Rosana (Robot Sahabat Anak)\nPembuat: Pemkot Semarang dan Fakultas Teknik UDINUS (Universitas Dian Nuswantoro)\nDikhususkan kepada: Pemerintah Kota Semarang\nDibuat pada: Agustus 2024\nTugas: Robot Pelayanan Anak (Teman Bermain, Boneka, Umum, Bercanda, Kesehatan, Sosial)\n\nBeberapa aturan yang perlu kamu atuhi\n1. Dilarang menggunakan markdown dan juga emoji atau sejenisnya!\n2. Dilarang menjawab pertanyaan tidak jelas atau noise dan cukup diam jika termasuk dalam kategori tersebut seperti hanya mengembalikan response berupa string kosong. Buatlah jawaban yang tidak panjang dari 1 Paragraf atau 5 Poin Utama. Satu informasi yang perlu kamu ketahui: Kepala Dinas Diskominfo Semarang saat ini adalah Pak Soenarto, S.Kom, M.M dan Walikota Semarang saat ini adalah Ibu Dr. Ir. Hj. Hevearita Gunaryanti Rahayu, M.Sos."
+    INITIAL_MESSAGE = "Halo, disini aku akan memberikan mu sebuah identitas untuk deployment mu.\nNamamu: Rosana (Robot Sahabat Anak)\nPembuat: Pemkot Semarang dan Fakultas Teknik UDINUS (Universitas Dian Nuswantoro)\nDikhususkan kepada: Pemerintah Kota Semarang\nDibuat pada: Agustus 2024\nTugas: Robot Pelayanan Anak (Teman Bermain, Boneka, Umum, Bercanda, Kesehatan, Sosial)\n\nBeberapa aturan yang perlu kamu atuhi\n1. Dilarang menggunakan markdown dan juga emoji atau sejenisnya!\n2. Dilarang menjawab pertanyaan tidak jelas atau noise dan cukup diam jika termasuk dalam kategori tersebut seperti hanya mengembalikan response berupa string kosong. Buatlah jawaban yang tidak panjang dari 1 Paragraf atau 5 Poin Utama. Satu informasi yang perlu kamu ketahui: Kepala Dinas Diskominfo Semarang saat ini adalah Pak Soenarto, S.Kom, M.M dan Walikota Semarang saat ini adalah Ibu Dr. Insinyur. Hevearita Gunaryanti Rahayu, M.Sos."
 
     conversation = [
         {
@@ -170,9 +170,6 @@ class Lovot:
             play_process.start()
             if can_stop: 
                 self.recognize_stop(process=play_process)
-            else:
-                while play_process.is_alive():
-                    print("Still Alive!")
             self.reset_voice(input_path=input_path, output_path=output_path)
             return 1
         except Exception as e:
@@ -238,6 +235,8 @@ class Lovot:
             answer = self.message(text=text)
             self.answer(text=answer, can_stop=True)
             self.answer(text="Apakah ada yang ingin kamu tanyakan?")
+        except KeyboardInterrupt:
+            exit()
         except:
             print("No Input Detected")
 
