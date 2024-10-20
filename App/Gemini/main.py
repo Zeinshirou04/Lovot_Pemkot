@@ -40,7 +40,7 @@ class Lovot:
         {
             "role": "model",
             "parts": [
-                "Baik, saya Rosana. Saya siap menerima instruksi. \n",
+                "Baik, saya Rosana. Saya siap menerima instruksi.",
             ],
         },
     ]
@@ -75,7 +75,7 @@ class Lovot:
 
         genai.configure(api_key=os.getenv("API_KEY"))
         self.model = genai.GenerativeModel(
-            "gemini-1.5-flash-001",
+            "   ",
         )
         self.chat = self.model.start_chat(history=self.history)
 
